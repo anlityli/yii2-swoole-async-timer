@@ -1,0 +1,23 @@
+{
+    "name": "anlity/yii2-swoole-async-timer",
+    "description": "用于异步处理任务和需要定时器完成的任务",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","swoole"],
+    "homepage": "https://github.com/anlityli/yii2-swoole-async-timer",
+    "license": "BSD-4-Clause",
+    "authors": [
+        {
+            "name": "anlity",
+            "email": "leo@leocode.net"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+        "anlity/yii2-swoole-async-timer": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "anlity\\swooleAsyncTimer\\": ""
+        }
+    }
+}
