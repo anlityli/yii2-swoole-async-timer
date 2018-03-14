@@ -159,7 +159,7 @@ class SHttpServer {
      */
     public function onWorkerStop($server, $workerId){
         // 关闭定时器
-        if($this->_timerId !== false){
+        if($this->_timerId !== false && $workerId == 0){
             $server->clearTimer($this->_timerId);
         }
         echo '['. date('Y-m-d H:i:s') ."]\t swoole_http_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
