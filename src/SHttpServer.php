@@ -296,6 +296,9 @@ class SHttpServer {
         if (empty($msg)) {
             return;
         }
+        if (!$this->setting['debug']){
+            return;
+        }
         if (!is_string($msg)) {
             $msg = var_export($msg, true);
         }

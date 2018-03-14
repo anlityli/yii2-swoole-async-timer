@@ -54,6 +54,7 @@ class SwooleAsyncTimerController extends Controller implements TimerInterface {
             'worker_num'        => '2',
             'task_worker_num'   => '2',
             'task_max_request'  => '10000',
+            'debug'            => true,
             'pidfile'         => $runtimePath.'/tmp/yii2-swoole-async-timer.pid',
             'log_dir'           => $runtimePath.'/yii2-swoole-async-timer/log',
             'task_tmpdir'       => $runtimePath.'/yii2-swoole-async-timer/task',
