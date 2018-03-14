@@ -228,7 +228,7 @@ class SHttpServer {
                 }
             }
             try{
-                print_r($action);
+                print_r($action.PHP_EOL);
                 $parts = $this->app->createController($action);
                 if (is_array($parts)) {
                     $res = $this->app->runAction($action,$params);
