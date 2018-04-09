@@ -9,7 +9,10 @@
 namespace anlity\swooleAsyncTimer;
 
 
-interface TimerInterface
+interface SocketInterface
 {
     public function timerCallback($timerId, $server);
+    public function onOpen($fd);
+    public function onClose($fd);
+    public function onMessage($fd, $data);
 }

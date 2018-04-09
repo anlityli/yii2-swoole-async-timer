@@ -9,10 +9,9 @@ namespace anlity\swooleAsyncTimer;
 
 use Yii;
 use yii\console\Controller;
-use yii\console\Exception;
 use anlity\swooleAsyncTimer\src\SwooleService;
 
-class SwooleAsyncTimerController extends Controller implements TimerInterface {
+class SwooleAsyncTimerController extends Controller {
     
     /**
      * 存储swooleAsync配置中的所有配置项
@@ -104,9 +103,5 @@ class SwooleAsyncTimerController extends Controller implements TimerInterface {
         }
     }
 
-    public function timerCallback($timerId, $server)
-    {
-        // TODO: Implement timerCallback() method.
-    }
 
 }

@@ -69,16 +69,20 @@ class SHttpServer {
      */
     public function run(){
 
-        $this->server = new \swoole_http_server($this->setting['host'], $this->setting['port']);
+        $this->server = new \swoole_websocket_server($this->setting['host'], $this->setting['port']);
         $this->server->set($this->setting);
         //回调函数
         $call = [
             'start',
             'workerStart',
             'managerStart',
+            'open',
+            'message',
+            //'receive',
             'request',
             'task',
             'finish',
+            'close',
             'workerStop',
             'shutdown',
         ];
@@ -121,13 +125,22 @@ class SHttpServer {
         $this->setProcessName($server->setting['process_name'] . '-manager');
     }
 
+    public function onOpen($server, $request){
+        $this->app->swooleAsyncTimer->onOpen($request->fd);
+    }
+
+    public function onMessage($server, $frame){
+        $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+    }
+
     /**
      * [onShutdown description]
      * @return [type] [description]
      */
-    public function onClose(){
-        unlink($this->setting['pidfile']);
-        echo '[' . date('Y-m-d H:i:s') . "]\t swoole_http_server shutdown\n";
+    public function onClose($server, $fd){
+        //unlink($this->setting['pidfile']);
+        $this->app->swooleAsyncTimer->onClose($fd);
+        //echo '[' . date('Y-m-d H:i:s') . "]\t swoole_http_server shutdown\n";
     }
 
     /**
@@ -146,7 +159,8 @@ class SHttpServer {
         if ($this->setting['with_timer'] && !$server->taskworker && $workerId == 0) {
             $server->tick($this->setting['timer_interval'], function($timerId) use($server){
                 $this->_timerId = $timerId;
-                $this->_swooleController->timerCallback($timerId, $server);
+                //$this->_swooleController->timerCallback($timerId, $server);
+                $this->app->swooleAsyncTimer->timerCallback($timerId, $server);
             });
         }
     }
@@ -193,8 +207,12 @@ class SHttpServer {
         if (isset($request->post['cmd']) && $request->post['cmd'] == 'status') {
             return $response->end(json_encode($this->server->stats()));
         }
-        $this->server->task($request->post['data']); 
-        
+        elseif (isset($request->post['cmd']) && $request->post['cmd'] == 'socket') {
+            $this->server->push($request->post['fd'], $request->post['data']);
+        }
+        else {
+            $this->server->task($request->post['data']);
+        }
         $out = '[' . date('Y-m-d H:i:s') . '] ' . json_encode($request) . PHP_EOL;
         // $out = '[' . date('Y-m-d H:i:s') . '] ' . var_export($request,true) . PHP_EOL;
         $response->end($out);
@@ -285,6 +303,11 @@ class SHttpServer {
 
         return true;
 
+    }
+
+    public function onShutdown(){
+        echo '[' . date('Y-m-d H:i:s') . "]\t server shutdown 关闭服务完成\n";
+        unlink($this->setting['pidfile']);
     }
 
     /**

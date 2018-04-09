@@ -9,8 +9,9 @@ namespace anlity\swooleAsyncTimer;
 
 use Yii;
 use anlity\swooleAsyncTimer\src\SCurl;
+use yii\helpers\Json;
 
-class SwooleAsyncTimerComponent extends \yii\base\Component
+class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInterface
 {
     /**
      * 异步执行入口
@@ -51,6 +52,58 @@ class SwooleAsyncTimerComponent extends \yii\base\Component
         $response = $curl->post("http://".$settings['host'].":".$settings['port']);
         
         return $response===false ? false : true;
+    }
+
+    /**
+     * 消息推送
+     * @param $fd
+     * 客户端ID
+     * @param $data
+     * @return bool
+     */
+    public function pushMsg($fd, $data){
+        $settings = Yii::$app->params['swooleAsyncTimer'];
+        $curl = new SCurl();
+        $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => Json::encode($data), 'cmd' => 'socket']);
+        $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
+        $times = 0;
+        $response = $curl->post("http://".$settings['host'].":".$settings['port']);
+
+        return $response===false ? false : true;
+    }
+
+    /**
+     * 需继承此方法，用于定时器的回调方法
+     * @param $timerId
+     * @param $server
+     */
+    public function timerCallback($timerId, $server){
+
+    }
+
+    /**
+     * 需继承此方法，用于websocket的握手记录fd
+     * @param $fd
+     */
+    public function onOpen($fd){
+
+    }
+
+    /**
+     * 需继承此方法，用于websocket的清除fd
+     * @param $fd
+     */
+    public function onClose($fd){
+
+    }
+
+    /**
+     * 需继承此方法，用于websocket的接受客户端消息
+     * @param $fd
+     * @param $data
+     */
+    public function onMessage($fd, $data){
+
     }
     
 }
