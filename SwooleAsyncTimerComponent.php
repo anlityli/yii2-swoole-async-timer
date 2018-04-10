@@ -64,7 +64,13 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     public function pushMsg($fd, $data){
         $settings = Yii::$app->params['swooleAsyncTimer'];
         $curl = new SCurl();
-        $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => Json::encode($data), 'cmd' => 'socket']);
+        if(!$fd){
+            return false;
+        }
+        if(!is_string($data)){
+            $data = Json::encode($data);
+        }
+        $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => $data, 'cmd' => 'socket']);
         $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
         $times = 0;
         $response = $curl->post("http://".$settings['host'].":".$settings['port']);
