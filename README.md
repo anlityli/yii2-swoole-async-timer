@@ -5,7 +5,7 @@ yii2-swoole-async-timer
 Installation
 ------------
 
-在mevyen的项目(代码中已保留原作者)的基础上加了一个定时器的功能，也就是打开swoole服务的时候开启一个定时器，来解决一些需要定时完成的任务，。
+在mevyen的项目(代码中已保留原作者)的基础上加了一个定时器的功能，也就是打开swoole服务的时候开启一个定时器，来解决一些需要定时完成的任务，2018年4月9日加入了WebSocket的功能，服务端改为了WebSocket，可以监听客户端发来的消息，和向客户端发送消息。
 
 安装
 
@@ -53,7 +53,7 @@ return [
 ];
 ```
 
-2、console的main.php文件引入新增的配置文件
+2、console的main.php文件引入新增的配置文件，配置文件参考 params-swoole-default.php
 ```php
 $params = array_merge(
     // ...
@@ -62,56 +62,76 @@ $params = array_merge(
 );
 ```
 
-3、在站点主配置文件(main.php)中增加components
+3、在站点主配置文件(main.php)controllerMap
+```php
+'controllerMap' => [
+    'swoole_server' => [
+        'class' => 'anlity\swooleAsyncTimer\SwooleAsyncTimerController',
+    ],
+],
+```
+
+4、在站点主配置文件(main.php)中增加components
 ```php
 'components' => [
-    'swooleasync' => [
-        'class' => 'anlity\swooleAsyncTimer\SwooleAsyncTimerComponent',
+    'swooleAsyncTimer' => [
+        'class' => 'common\components\SwooleAsyncTimer',
     ]
 ]
 ```
 
-4、console的控制器内容：
+5、从目录common/components/新建SwooleAsyncTimer类，类内容：
 ```php
 <?php
-namespace console\controllers;
+namespace common\components;
 
-use Yii;
-use anlity\swooleAsyncTimer\SwooleAsyncTimerController;
+use anlity\swooleAsyncTimer\SocketInterface;
+use anlity\swooleAsyncTimer\SwooleAsyncTimerComponent;
 
-class SwooleController extends SwooleAsyncTimerController
-{
-    
-    public function timerCallback($timerId, $server)
-    {
-        // todo 这里是您的需要在定时器里完成的逻辑代码
+class SwooleAsyncTimer extends SwooleAsyncTimerComponent implements SocketInterface {
+
+    public function timerCallback($timerId, $server){
+        // 定时器的回调逻辑
+    }
+
+
+    public function onOpen($fd){
+        // 与客户端握手时的逻辑，可以把$fd写入到session或者缓存中
+    }
+
+
+    public function onClose($fd){
+        // 与客户端断开连接时的逻辑
+    }
+
+
+    public function onMessage($fd, $data){
+        // 收到客户端的消息的逻辑
     }
 }
 ```
 
-5、服务管理
+6、服务管理
 ```php
 //启动
-./yii swoole/run start
+./yii swoole_server/run start
  
 //重启
-./yii swoole/run restart
+./yii swoole_server/run restart
 
 //停止
-./yii swoole/run stop
+./yii swoole_server/run stop
 
 //查看状态
-./yii swoole/run stats
+./yii swoole_server/run stats
 
 //查看进程列表
-./yii swoole/run list
+./yii swoole_server/run list
 ```
 
-6、执行异步任务可以
+7、执行异步任务可以
 ````php
 <?php
-namespace console\controllers;
-use yii\console\Controller;
 
 class TestController extends Controller 
 {  
@@ -132,7 +152,7 @@ class TestController extends Controller
 				// ...
 			]
 		];
-		\Yii::$app->swooleasync->async(json_encode($data));
+		\Yii::$app->SwooleAsyncTimer->async(json_encode($data));
 	}
 
 	public function actionMail($a='',$b=''){
@@ -141,7 +161,22 @@ class TestController extends Controller
 }
 ````
 
-7、无人值守
+8、给客户端发送消息可以
+````php
+<?php
+
+class TestController extends Controller 
+{  
+	public function actionPushMsg(){
+		$fd = 1;
+		$data = [];
+		\Yii::$app->SwooleAsyncTimer->pushMsg($fd, $data);
+	}
+
+}
+````
+
+9、无人值守
 ````shell
-* * * * * /path/to/yii/application/yii swooleasync/run start >> /var/log/console-app.log 2>&1
+* * * * * /path/to/yii/application/yii swoole_server/run start >> /var/log/console-app.log 2>&1
 ````

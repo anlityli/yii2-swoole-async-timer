@@ -127,14 +127,21 @@ class SwooleService{
      */
     public function serviceStats(){
 
-        $client = new \swoole_client(SWOOLE_SOCK_TCP);
-        if (!$client->connect($this->settings['host'], $this->settings['port'], $this->settings['client_timeout'])){
-            exit("Error: connect server failed. code[{$client->errCode}]\n");
-        }
-        $client->send('stats');
-
-        echo $client->recv();
-
+        $client = new \swoole_http_client($this->settings['host'], $this->settings['port']);
+//        if (!$client->connect($this->settings['host'], $this->settings['port'], $this->settings['client_timeout'])){
+//            exit("Error: connect server failed. code[{$client->errCode}]\n");
+//        }
+//        $client->send('stats');
+//
+//        echo $client->recv();
+        $client->on('message', function ($cli, $frame){
+            var_dump($frame);
+            $cli->close();
+        });
+        $client->upgrade('/', function ($cli){
+            $cli->push('stats');
+//            $cli->close();
+        });
     }
 
     /**

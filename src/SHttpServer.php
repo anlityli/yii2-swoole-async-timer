@@ -130,7 +130,16 @@ class SHttpServer {
     }
 
     public function onMessage($server, $frame){
-        $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+        // 检测服务是否开启
+        if($frame->data == 'stats'){
+            $websocket_number['websocket_number'] = count($server->connection_list(0,100));
+            array_push($websocket_number,$server->stats());
+            return $server->push($frame->fd,json_encode($websocket_number));
+        }
+        // 给回调函数发送消息
+        else {
+            $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+        }
     }
 
     /**
@@ -246,7 +255,7 @@ class SHttpServer {
                 }
             }
             try{
-                print_r($action.PHP_EOL);
+                //print_r($action.PHP_EOL);
                 $parts = $this->app->createController($action);
                 if (is_array($parts)) {
                     $res = $this->app->runAction($action,$params);
