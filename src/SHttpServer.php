@@ -8,6 +8,8 @@
 
 namespace anlity\swooleAsyncTimer\src;
 
+use yii\base\Exception;
+
 class SHttpServer {
     /**
      * swoole http-server 实例
@@ -261,8 +263,8 @@ class SHttpServer {
                     $res = $this->app->runAction($action,$params);
                     $this->logger('[task result] '.var_export($res,true));
                 }
-            }catch(\Exception $e){
-                $this->logger($e);
+            }catch(Exception $e){
+                $this->logger($e->getMessage());
             }
         }
         return $data;
@@ -332,7 +334,11 @@ class SHttpServer {
             return;
         }
         if (!is_string($msg)) {
-            $msg = var_export($msg, true);
+            if(is_object($msg) || is_array($msg)){
+                $msg = var_export($msg, true);
+            } else {
+                $msg = '未知错误';
+            }
         }
         //日志内容
         $msg = '['. date('Y-m-d H:i:s') .'] '. $msg . PHP_EOL;
