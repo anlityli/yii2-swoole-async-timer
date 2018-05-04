@@ -7,6 +7,8 @@
  */
 namespace anlity\swooleAsyncTimer\src;
 
+use yii\helpers\Json;
+
 class SwooleService{
     /**
      * 配置对象
@@ -136,6 +138,7 @@ class SwooleService{
 //        echo $client->recv();
         $client->on('message', function ($cli, $frame){
             var_dump($frame);
+            echo(PHP_EOL);
             $cli->close();
         });
         $client->upgrade('/', function ($cli){

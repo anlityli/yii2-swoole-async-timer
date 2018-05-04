@@ -7,6 +7,7 @@
  */
 namespace anlity\swooleAsyncTimer;
 
+use anlity\swooleAsyncTimer\src\SocketSecurity;
 use anlity\swooleAsyncTimer\src\SwooleClient;
 use Yii;
 use anlity\swooleAsyncTimer\src\SCurl;
@@ -45,25 +46,9 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      */
     public function async($data)
     {
-        if(is_string($data)){
-            $data = Json::decode($data);
-        }
-        $data['type'] = 'async';
-        $settings = Yii::$app->params['swooleAsyncTimer'];
-        if($settings['sender_client'] == 'swoole'){
-            $client = new SwooleClient();
-            $client->setOption('host', $settings['host']);
-            $client->setOption('port', $settings['port']);
-            $client->setOption('timeout', $settings['client_timeout']);
-            $client->setOption('data', Json::encode($data));
-            $response = $client->post();
-        } else {
-            $client = new SCurl();
-            $client->setOption(CURLOPT_POSTFIELDS, ["data"=>Json::encode($data)]);
-            $client->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
-            $response = $client->post("http://".$settings['host'].":".$settings['port']);
-        }
-        return $response===false ? false : true;
+        $data = $this->paresData($data);
+        $data = ['type'=>'async', 'data'=>$data];
+        return $this->requestServer($data);
     }
 
     /**
@@ -74,34 +59,55 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      * @return bool
      */
     public function pushMsg($fd, $data){
+        if(!$fd){
+            return false;
+        }
+        $data = $this->paresData($data);
+        $data = ['type'=>'pushMsg', 'fd' => $fd, 'data'=>$data];
+        return $this->requestServer($data);
+    }
+
+    /**
+     * 请求服务端
+     * @param $data
+     * @return bool
+     */
+    private function requestServer($data){
         $settings = Yii::$app->params['swooleAsyncTimer'];
+        $socketSecurity = new SocketSecurity($settings);
+        $data = $socketSecurity->paramsFormat($data);
         if($settings['sender_client'] == 'swoole'){
             $client = new SwooleClient();
             $client->setOption('host', $settings['host']);
             $client->setOption('port', $settings['port']);
             $client->setOption('timeout', $settings['client_timeout']);
-            if(!$fd){
-                return false;
-            }
-            if(!is_string($data)){
-                $data = Json::encode($data);
-            }
-            $client->setOption('data', json_encode(['fd' => $fd, 'data' => $data, 'type' => 'pushMsg']));
+            $client->setOption('data', Json::encode($data));
             $response = $client->post();
         } else {
-            $curl = new SCurl();
-            if(!$fd){
-                return false;
-            }
-            if(!is_string($data)){
-                $data = Json::encode($data);
-            }
-            $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => $data, 'cmd' => 'socket']);
-            $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
-            $response = $curl->post("http://".$settings['host'].":".$settings['port']);
+            $client = new SCurl();
+            $client->setOption(CURLOPT_POSTFIELDS, $data);
+            $client->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
+            $response = $client->post("http://".$settings['host'].":".$settings['port']);
         }
+        if($response === false){
+            return false;
+        }
+        if($response === 'false'){
+            return false;
+        }
+        return true;
+    }
 
-        return $response===false ? false : true;
+    /**
+     * 处理数据
+     * @param $data
+     * @return string
+     */
+    private function paresData($data){
+        if(!is_string($data)){
+            $data = Json::encode($data);
+        }
+        return $data;
     }
 
     /**

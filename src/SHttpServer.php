@@ -128,10 +128,21 @@ class SHttpServer {
         $this->setProcessName($server->setting['process_name'] . '-manager');
     }
 
+    /**
+     * [onOpen description]
+     * @param $server
+     * @param $request
+     */
     public function onOpen($server, $request){
         $this->app->swooleAsyncTimer->onOpen($request->fd);
     }
 
+    /**
+     * [onMessage description]
+     * @param $server
+     * @param $frame
+     * @return mixed
+     */
     public function onMessage($server, $frame){
         // 检测服务是否开启
         if($frame->data == 'stats'){
@@ -139,18 +150,25 @@ class SHttpServer {
             array_push($websocket_number,$server->stats());
             return $server->push($frame->fd,Json::encode($websocket_number));
         }
-        // 给回调函数发送消息
         else {
             $data = Json::decode($frame->data);
-            if(isset($data['type']) && $data['type'] == 'async'){
-                unset($data['type']);
-                $server->task(Json::encode($data));
-                $server->push($frame->fd, 'to task success!');
-            } elseif(isset($data['type']) && $data['type'] == 'pushMsg') {
-                unset($data['type']);
-                $server->push($data['fd'], $data['data']);
-            }else {
-                $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+            if(isset($data['type'])){
+                $socketSecurity = new SocketSecurity($this->setting);
+                if(!$socketSecurity->checkSignature($data['signature'], $data)){
+                    return $server->push($frame->fd, 'false');
+                }
+                // 处理异步任务
+                if($data['type'] == 'async'){
+                    $server->task(Json::encode($data['data']));
+                    return $server->push($frame->fd, 'to task success!');
+                }
+                // 处理消息推送任务
+                elseif ($data['type'] == 'pushMsg'){
+                    return $server->push($data['fd'], $data['data']);
+                }
+                return $server->push($frame->fd, 'false');
+            } else {
+                return $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
             }
         }
     }
@@ -228,15 +246,30 @@ class SHttpServer {
         //获取swoole服务的当前状态
         if (isset($request->post['cmd']) && $request->post['cmd'] == 'status') {
             return $response->end(Json::encode($this->server->stats()));
-        }
-        elseif (isset($request->post['cmd']) && $request->post['cmd'] == 'socket') {
-            $this->server->push($request->post['fd'], $request->post['data']);
-        }
-        else {
-            $this->server->task($request->post['data']);
+        } else {
+            if(isset($request->post['type'])){
+                $socketSecurity = new SocketSecurity($this->setting);
+                if(!$socketSecurity->checkSignature($request->post['signature'], $request->post)){
+                    return $response->end('false');
+                }
+                if($request->post['type'] == 'async'){
+                    $data = $request->post['data'];
+                    if(is_string($data)){
+                        $data = Json::decode($data);
+                    }
+                    $this->server->task($data);
+                }
+                elseif($request->post['type'] == 'pushMsg'){
+                    $this->server->push($request->post['fd'], $request->post['data']);
+                }
+                else {
+                    return $response->end('false');
+                }
+            } else {
+                return $response->end('false');
+            }
         }
         $out = '[' . date('Y-m-d H:i:s') . '] ' . Json::encode($request) . PHP_EOL;
-        // $out = '[' . date('Y-m-d H:i:s') . '] ' . var_export($request,true) . PHP_EOL;
         $response->end($out);
 
         return true;

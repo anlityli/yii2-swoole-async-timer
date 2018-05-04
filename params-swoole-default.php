@@ -21,6 +21,9 @@ return [
         'pidfile'          => '/tmp/y.pid', 	//服务启动进程id文件保存位置
 
         //--以上配置项均来自swoole-server的同名配置，可随意参考swoole-server配置说明自主增删--
+        'sender_client'    => 'swoole',         //请求服务端的客户端方式(swoole|curl)
+        'auth_key'          => '4m8s4Pjv9xroqo6D', //授权密钥
+        'max_time_diff'      => 0,              //请求服务端允许的最大时间差
         'debug'            => true,             //是否开启调试模式
         'with_timer'       => true,             //是否使用定时器
         'timer_interval'   => 5000,             //定时器时间间隔
