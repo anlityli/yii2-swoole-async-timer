@@ -7,6 +7,7 @@
  */
 namespace anlity\swooleAsyncTimer;
 
+use anlity\swooleAsyncTimer\src\SwooleClient;
 use Yii;
 use anlity\swooleAsyncTimer\src\SCurl;
 use yii\helpers\Json;
@@ -44,13 +45,24 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      */
     public function async($data)
     {
+        if(is_string($data)){
+            $data = Json::decode($data);
+        }
+        $data['type'] = 'async';
         $settings = Yii::$app->params['swooleAsyncTimer'];
-        $curl = new SCurl();
-        $curl->setOption(CURLOPT_POSTFIELDS, ["data"=>$data]);
-        $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
-        $times = 0;
-        $response = $curl->post("http://".$settings['host'].":".$settings['port']);
-        
+        if($settings['sender_client'] == 'swoole'){
+            $client = new SwooleClient();
+            $client->setOption('host', $settings['host']);
+            $client->setOption('port', $settings['port']);
+            $client->setOption('timeout', $settings['client_timeout']);
+            $client->setOption('data', Json::encode($data));
+            $response = $client->post();
+        } else {
+            $client = new SCurl();
+            $client->setOption(CURLOPT_POSTFIELDS, ["data"=>Json::encode($data)]);
+            $client->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
+            $response = $client->post("http://".$settings['host'].":".$settings['port']);
+        }
         return $response===false ? false : true;
     }
 
@@ -63,17 +75,31 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      */
     public function pushMsg($fd, $data){
         $settings = Yii::$app->params['swooleAsyncTimer'];
-        $curl = new SCurl();
-        if(!$fd){
-            return false;
+        if($settings['sender_client'] == 'swoole'){
+            $client = new SwooleClient();
+            $client->setOption('host', $settings['host']);
+            $client->setOption('port', $settings['port']);
+            $client->setOption('timeout', $settings['client_timeout']);
+            if(!$fd){
+                return false;
+            }
+            if(!is_string($data)){
+                $data = Json::encode($data);
+            }
+            $client->setOption('data', json_encode(['fd' => $fd, 'data' => $data, 'type' => 'pushMsg']));
+            $response = $client->post();
+        } else {
+            $curl = new SCurl();
+            if(!$fd){
+                return false;
+            }
+            if(!is_string($data)){
+                $data = Json::encode($data);
+            }
+            $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => $data, 'cmd' => 'socket']);
+            $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
+            $response = $curl->post("http://".$settings['host'].":".$settings['port']);
         }
-        if(!is_string($data)){
-            $data = Json::encode($data);
-        }
-        $curl->setOption(CURLOPT_POSTFIELDS, ['fd' => $fd, 'data' => $data, 'cmd' => 'socket']);
-        $curl->setOption(CURLOPT_TIMEOUT, $settings['client_timeout']);
-        $times = 0;
-        $response = $curl->post("http://".$settings['host'].":".$settings['port']);
 
         return $response===false ? false : true;
     }

@@ -9,6 +9,7 @@
 namespace anlity\swooleAsyncTimer\src;
 
 use yii\base\Exception;
+use yii\helpers\Json;
 
 class SHttpServer {
     /**
@@ -136,11 +137,21 @@ class SHttpServer {
         if($frame->data == 'stats'){
             $websocket_number['websocket_number'] = count($server->connection_list(0,100));
             array_push($websocket_number,$server->stats());
-            return $server->push($frame->fd,json_encode($websocket_number));
+            return $server->push($frame->fd,Json::encode($websocket_number));
         }
         // 给回调函数发送消息
         else {
-            $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+            $data = Json::decode($frame->data);
+            if(isset($data['type']) && $data['type'] == 'async'){
+                unset($data['type']);
+                $server->task(Json::encode($data));
+                $server->push($frame->fd, 'to task success!');
+            } elseif(isset($data['type']) && $data['type'] == 'pushMsg') {
+                unset($data['type']);
+                $server->push($data['fd'], $data['data']);
+            }else {
+                $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
+            }
         }
     }
 
@@ -216,7 +227,7 @@ class SHttpServer {
     { 
         //获取swoole服务的当前状态
         if (isset($request->post['cmd']) && $request->post['cmd'] == 'status') {
-            return $response->end(json_encode($this->server->stats()));
+            return $response->end(Json::encode($this->server->stats()));
         }
         elseif (isset($request->post['cmd']) && $request->post['cmd'] == 'socket') {
             $this->server->push($request->post['fd'], $request->post['data']);
@@ -224,7 +235,7 @@ class SHttpServer {
         else {
             $this->server->task($request->post['data']);
         }
-        $out = '[' . date('Y-m-d H:i:s') . '] ' . json_encode($request) . PHP_EOL;
+        $out = '[' . date('Y-m-d H:i:s') . '] ' . Json::encode($request) . PHP_EOL;
         // $out = '[' . date('Y-m-d H:i:s') . '] ' . var_export($request,true) . PHP_EOL;
         $response->end($out);
 
