@@ -257,9 +257,6 @@ class SHttpServer {
                 }
                 if($request->post['type'] == 'async'){
                     $data = $request->post['data'];
-                    if(is_string($data)){
-                        $data = Json::decode($data);
-                    }
                     $this->server->task($data);
                 }
                 elseif($request->post['type'] == 'pushMsg'){
@@ -323,8 +320,9 @@ class SHttpServer {
      * @return [type]       [description]
      */
     private function parseData($data){
-
-        $data = Json::decode($data);
+        if(is_string($data)){
+            $data = Json::decode($data);
+        }
         $data = $data ?: [];
         if(!isset($data["data"]) || empty($data["data"])){
             return false;

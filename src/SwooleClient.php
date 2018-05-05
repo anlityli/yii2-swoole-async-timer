@@ -36,7 +36,7 @@ class SwooleClient
      */
     public function post(){
         $this->_client = new SWebSocket($this->option['host'], $this->option['port']);
-        if (!$this->_client->connect()) {
+        if (!$this->_client->connect($this->option['timeout'])) {
             $this->addError('connect', "服务器连接失败. Error: {$this->_client->errCode}");
             return false;
         }
