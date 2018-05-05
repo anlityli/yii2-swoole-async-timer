@@ -44,6 +44,9 @@ return [
         'pidfile'          => '/tmp/y.pid', 		 //服务启动进程id文件保存位置
 
         //--以上配置项均来自swoole-server的同名配置，可随意参考swoole-server配置说明自主增删--
+        'sender_client'    => 'swoole',         //请求服务端的客户端方式(swoole|curl)
+                'auth_key'          => 'xxxxxxxxxxxxxxx', //授权密钥
+                'max_time_diff'      => 0,              //请求服务端允许的最大时间差
         'debug'            => true,             //是否开启调试模式
         'with_timer'       => true,            //是否使用定时器
         'timer_interval'   => 5000,            //定时器时间间隔
@@ -94,6 +97,11 @@ class SwooleAsyncTimer extends SwooleAsyncTimerComponent implements SocketInterf
         // 定时器的回调逻辑
     }
 
+    public function onWorkerStart($server, $workerId){
+    }
+
+    public function onWorkerStop($server, $workerId){
+    }
 
     public function onOpen($fd){
         // 与客户端握手时的逻辑，可以把$fd写入到session或者缓存中
