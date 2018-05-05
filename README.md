@@ -184,7 +184,22 @@ class TestController extends Controller
 }
 ````
 
-9、无人值守
+9、从服务端给webSocket客户端发送消息
+````php
+<?php
+
+class TestController extends Controller 
+{  
+	public function actionPushMsg(){
+		$fd = 1;
+		$data = [];
+		\Yii::$app->SwooleAsyncTimer->pushMsgByCli($fd, $data);
+	}
+
+}
+````
+
+10、无人值守
 ````shell
 * * * * * /path/to/yii/application/yii swoole_server/run start >> /var/log/console-app.log 2>&1
 ````
