@@ -15,6 +15,17 @@ use yii\helpers\Json;
 
 class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInterface
 {
+
+    public $swooleServer;
+
+    /**
+     * 获取服务端对象
+     * @return mixed
+     */
+    public function getSwooleServer(){
+        return $this->swooleServer;
+    }
+
     /**
      * 异步执行入口
      * $data.data 定义需要执行的任务列表，其中如果指定多个任务(以数组形式),则server将顺序执行
@@ -52,11 +63,11 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     }
 
     /**
-     * 消息推送
+     * 用于从页面端实现webSocket推送消息
      * @param $fd
-     * 客户端ID
      * @param $data
      * @return bool
+     * @throws \Exception
      */
     public function pushMsg($fd, $data){
         if(!$fd){
@@ -68,9 +79,24 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     }
 
     /**
+     * 从服务端的cli直接推送消息到客户端
+     * @param $fd
+     * @param $data
+     * @return bool
+     */
+    public function pushMsgByCli($fd, $data){
+        if(!$fd){
+            return false;
+        }
+        $data = $this->paresData($data);
+        $this->swooleServer->push($fd, $data);
+    }
+
+    /**
      * 请求服务端
      * @param $data
      * @return bool
+     * @throws \Exception
      */
     private function requestServer($data){
         $settings = Yii::$app->params['swooleAsyncTimer'];
@@ -111,6 +137,22 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     }
 
     /**
+     * swoole进程服务开始时的回调
+     * @param $server
+     * @param $workerId
+     */
+    public function onWorkerStart($server, $workerId){
+    }
+
+    /**
+     * swoole进程服务结束时的回调
+     * @param $server
+     * @param $workerId
+     */
+    public function onWorkerStop($server, $workerId){
+    }
+
+    /**
      * 需继承此方法，用于定时器的回调方法
      * @param $timerId
      * @param $server
@@ -124,7 +166,6 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      * @param $fd
      */
     public function onOpen($fd){
-
     }
 
     /**

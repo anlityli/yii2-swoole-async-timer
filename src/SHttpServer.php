@@ -72,7 +72,7 @@ class SHttpServer {
      */
     public function run(){
 
-        $this->server = new \swoole_websocket_server($this->setting['host'], $this->setting['port']);
+        $this->server = $this->app->swooleAsyncTimer->swooleServer = new \swoole_websocket_server($this->setting['host'], $this->setting['port']);
         $this->server->set($this->setting);
         //回调函数
         $call = [
@@ -159,13 +159,14 @@ class SHttpServer {
                 }
                 // 处理异步任务
                 if($data['type'] == 'async'){
-                    $server->task(Json::encode($data['data']));
+                    $server->task($data['data']);
                     return $server->push($frame->fd, 'to task success!');
                 }
                 // 处理消息推送任务
                 elseif ($data['type'] == 'pushMsg'){
                     return $server->push($data['fd'], $data['data']);
                 }
+                echo('类型失败'.PHP_EOL);
                 return $server->push($frame->fd, 'false');
             } else {
                 return $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
@@ -203,6 +204,7 @@ class SHttpServer {
                 $this->app->swooleAsyncTimer->timerCallback($timerId, $server);
             });
         }
+        $this->app->swooleAsyncTimer->onWorkerStart($server, $workerId);
     }
 
     /**
@@ -216,6 +218,7 @@ class SHttpServer {
         if($this->_timerId !== false && $workerId == 0){
             $server->clearTimer($this->_timerId);
         }
+        $this->app->swooleAsyncTimer->onWorkerStop($server, $workerId);
         echo '['. date('Y-m-d H:i:s') ."]\t swoole_http_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
     }
 
@@ -321,7 +324,7 @@ class SHttpServer {
      */
     private function parseData($data){
 
-        $data = json_decode($data,true);
+        $data = Json::decode($data);
         $data = $data ?: [];
         if(!isset($data["data"]) || empty($data["data"])){
             return false;
@@ -339,7 +342,7 @@ class SHttpServer {
         if(!isset($data['finish']) || !is_array($data['finish'])){
             return false;
         }
-        return json_encode(['data'=>$data['finish']]);
+        return Json::encode(['data'=>$data['finish']]);
     }
 
     /**
