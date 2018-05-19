@@ -215,7 +215,8 @@ class SHttpServer {
      */
     public function onWorkerStop($server, $workerId){
         // 关闭定时器
-        if($this->_timerId !== false && $workerId == 0){
+        if($this->_timerId !== false){
+            echo '['. date('Y-m-d H:i:s') ."]\t 清空定时器{$this->_timerId}\n";
             $server->clearTimer($this->_timerId);
         }
         $this->app->swooleAsyncTimer->onWorkerStop($server, $workerId);
