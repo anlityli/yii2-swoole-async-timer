@@ -103,12 +103,16 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
         $socketSecurity = new SocketSecurity($settings);
         $data = $socketSecurity->paramsFormat($data);
         if($settings['sender_client'] == 'swoole'){
-            $client = new SwooleClient();
-            $client->setOption('host', $settings['host']);
-            $client->setOption('port', $settings['port']);
-            $client->setOption('timeout', $settings['client_timeout']);
-            $client->setOption('data', Json::encode($data));
-            $response = $client->post();
+            try {
+                $client = new SwooleClient();
+                $client->setOption('host', $settings['host']);
+                $client->setOption('port', $settings['port']);
+                $client->setOption('timeout', $settings['client_timeout']);
+                $client->setOption('data', Json::encode($data));
+                $response = $client->post();
+            } catch (\Exception $e){
+                $response = false;
+            }
         } else {
             $client = new SCurl();
             $client->setOption(CURLOPT_POSTFIELDS, $data);
