@@ -89,7 +89,18 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
             return false;
         }
         $data = $this->paresData($data);
-        $this->swooleServer->push($fd, $data);
+        return $this->swooleServer->push($fd, $data);
+    }
+
+    /**
+     * 广播发送消息
+     * @param $data
+     */
+    public function pushMsgByCliToAll($data){
+        $data = $this->paresData($data);
+        foreach($this->swooleServer->connections as $fd){
+            $this->swooleServer->push($fd, $data);
+        }
     }
 
     /**
