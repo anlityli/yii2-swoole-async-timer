@@ -79,6 +79,18 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     }
 
     /**
+     * 用于从页面端实现webSocket推送消息给所有已连接的会员
+     * @param $data
+     * @return bool
+     * @throws \Exception
+     */
+    public function pushMsgAll($data){
+        $data = $this->paresData($data);
+        $data = ['type'=>'pushMsgAll', 'data'=>$data];
+        return $this->requestServer($data);
+    }
+
+    /**
      * 从服务端的cli直接推送消息到客户端
      * @param $fd
      * @param $data
@@ -96,7 +108,7 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      * 广播发送消息
      * @param $data
      */
-    public function pushMsgByCliToAll($data){
+    public function pushMsgAllByCli($data){
         $data = $this->paresData($data);
         foreach($this->swooleServer->connections as $fd){
             $this->swooleServer->push($fd, $data);

@@ -166,6 +166,14 @@ class SHttpServer {
                 elseif ($data['type'] == 'pushMsg'){
                     return $server->push($data['fd'], $data['data']);
                 }
+                // 处理消息推送全部连接
+                elseif ($data['type'] == 'pushMsgAll'){
+                    $pushMsgAllResult = true;
+                    foreach($server->connections as $fd){
+                        if(!$server->push($fd, $data['data'])) $pushMsgAllResult = false;
+                    }
+                    return $pushMsgAllResult;
+                }
                 echo('类型失败'.PHP_EOL);
                 return $server->push($frame->fd, 'false');
             } else {
@@ -262,6 +270,11 @@ class SHttpServer {
                 }
                 elseif($request->post['type'] == 'pushMsg'){
                     $this->server->push($request->post['fd'], $request->post['data']);
+                }
+                elseif($request->post['type'] == 'pushMsgAll'){
+                    foreach($this->server->connections as $fd){
+                        $this->server->push($fd, $request->post['data']);
+                    }
                 }
                 else {
                     return $response->end('false');
