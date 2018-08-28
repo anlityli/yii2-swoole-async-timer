@@ -121,7 +121,7 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      * @return bool
      * @throws \Exception
      */
-    private function requestServer($data){
+    public function requestServer($data){
         $settings = Yii::$app->params['swooleAsyncTimer'];
         $socketSecurity = new SocketSecurity($settings);
         $data = $socketSecurity->paramsFormat($data);
@@ -156,7 +156,7 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
      * @param $data
      * @return string
      */
-    private function paresData($data){
+    public function paresData($data){
         if(!is_string($data)){
             $data = Json::encode($data);
         }
