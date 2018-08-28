@@ -164,7 +164,9 @@ class SHttpServer {
                 }
                 // 处理消息推送任务
                 elseif ($data['type'] == 'pushMsg'){
-                    return $server->push($data['fd'], $data['data']);
+                    if($server->push($data['fd'], $data['data'])){
+                        return $server->push($frame->fd, 'to push message success!');
+                    }
                 }
                 // 处理消息推送全部连接
                 elseif ($data['type'] == 'pushMsgAll'){
@@ -172,9 +174,12 @@ class SHttpServer {
                     foreach($server->connections as $fd){
                         if(!$server->push($fd, $data['data'])) $pushMsgAllResult = false;
                     }
-                    return $pushMsgAllResult;
+                    if($pushMsgAllResult){
+                        return $server->push($frame->fd, 'to push message success!');
+                    }
+                } else {
+                    echo('类型失败'.PHP_EOL);
                 }
-                echo('类型失败'.PHP_EOL);
                 return $server->push($frame->fd, 'false');
             } else {
                 return $this->app->swooleAsyncTimer->onMessage($frame->fd, $frame->data);
