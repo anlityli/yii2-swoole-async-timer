@@ -326,6 +326,9 @@ class SHttpServer {
                     $res = $this->app->runAction($action,$params);
                     $this->logger('[task result] '.var_export($res,true));
                 }
+                if($this->app->db && $this->app->db->isActive){
+                    $this->app->db->close();
+                }
             }catch(Exception $e){
                 $this->logger($e->getMessage());
             }
