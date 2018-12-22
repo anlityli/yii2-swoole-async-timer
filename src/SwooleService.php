@@ -116,7 +116,7 @@ class SwooleService{
         }
 
         //启动
-        $server = new SHttpServer($this->settings,$this->app,$this->swooleContorller);
+        $server = new SServer($this->settings,$this->app,$this->swooleContorller);
         $server->run();
         
     }

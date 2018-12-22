@@ -1,9 +1,10 @@
 <?php
 /**
- * Swoole 实现的 http server,用来处理异步多进程任务
- * $Id: SHttpServer.php 9507 2016-09-29 06:48:44Z mevyen $
+ * Swoole 实现的 server,用来处理异步多进程任务
+ * $Id: SServer.php 9507 2016-09-29 06:48:44Z mevyen $
  * $Date: 2016-09-29 14:48:44 +0800 (Wed, 07 Sep 2016) $
  * $Author: mevyen $
+ * $Modifier: anlity $
  */
 
 namespace anlity\swooleAsyncTimer\src;
@@ -11,10 +12,10 @@ namespace anlity\swooleAsyncTimer\src;
 use yii\base\Exception;
 use yii\helpers\Json;
 
-class SHttpServer {
+class SServer {
     /**
-     * swoole http-server 实例
-     * @var null|swoole_http_server
+     * swoole server 实例
+     * @var null|swoole_server
      */
     protected $server = null;
 
@@ -39,7 +40,7 @@ class SHttpServer {
     private $_swooleController;
 
     /**
-     * SHttpServer constructor.
+     * SServer constructor.
      * @param $setting
      * @param $app
      * @param $swooleController
@@ -110,7 +111,7 @@ class SHttpServer {
      * @return [type]         [description]
      */
     public function onStart($server){
-        echo '[' . date('Y-m-d H:i:s') . "]\t swoole_http_server master worker start\n";
+        echo '[' . date('Y-m-d H:i:s') . "]\t swoole_server master worker start\n";
         $this->setProcessName($server->setting['process_name'] . '-master');
         //记录进程id,脚本实现自动重启
         $pid = "{$this->server->master_pid}\n{$this->server->manager_pid}";
@@ -124,7 +125,7 @@ class SHttpServer {
      * @return [type]         [description]
      */
     public function onManagerStart($server){
-        echo '[' . date('Y-m-d H:i:s') . "]\t swoole_http_server manager worker start\n";
+        echo '[' . date('Y-m-d H:i:s') . "]\t swoole_server manager worker start\n";
         $this->setProcessName($server->setting['process_name'] . '-manager');
     }
 
@@ -194,7 +195,7 @@ class SHttpServer {
     public function onClose($server, $fd){
         //unlink($this->setting['pidfile']);
         $this->app->swooleAsyncTimer->onClose($fd);
-        //echo '[' . date('Y-m-d H:i:s') . "]\t swoole_http_server shutdown\n";
+        //echo '[' . date('Y-m-d H:i:s') . "]\t swoole_server shutdown\n";
     }
 
     /**
@@ -233,7 +234,7 @@ class SHttpServer {
             $server->clearTimer($this->_timerId);
         }
         $this->app->swooleAsyncTimer->onWorkerStop($server, $workerId);
-        echo '['. date('Y-m-d H:i:s') ."]\t swoole_http_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
+        echo '['. date('Y-m-d H:i:s') ."]\t swoole_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
     }
 
     // /**
@@ -252,7 +253,7 @@ class SHttpServer {
 
     // }
     /**
-     * http请求处理
+     * 请求处理
      * @param $request
      * @param $response
      *
