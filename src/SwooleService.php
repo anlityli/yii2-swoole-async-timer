@@ -171,11 +171,9 @@ class SwooleService{
 
     /**
      * 停止服务
-     * @param  [type]  $host      host
-     * @param  [type]  $port      port
-     * @return [type]             [description]
+     * @param bool $isForce
      */
-    public function serviceStop(){
+    public function serviceStop($isForce = false){
 
         $pidfile = $this->settings['pidfile'];
 
@@ -185,20 +183,17 @@ class SwooleService{
             $this->error("pid文件:". $pidfile ."不存在");
         }
         $pid = explode("\n", file_get_contents($pidfile));
-
-        if ($pid[0]) {
-            $cmd = "kill {$pid[0]}";
-            exec($cmd);
-            do {
-                $out = [];
-                $c = "ps ax | awk '{ print $1 }' | grep -e \"^{$pid[0]}$\"";
-                exec($c, $out);
-                if (empty($out)) {
-                    break;
-                }else{
-                    exec("kill -9 {$pid[0]}");
+        if($isForce && !empty($pid)){
+            foreach($pid as $id){
+                if($id){
+                    $this->_kill($id);
                 }
-            } while (true);
+            }
+        }
+        if(!$isForce){
+            if ($pid[0]) {
+                $this->_kill($pid[0]);
+            }
         }
 
         //确保停止服务后swoole-task-pid文件被删除
@@ -208,6 +203,29 @@ class SwooleService{
 
         $this->msg("服务已停止");
 
+    }
+
+    /**
+     * 杀进程
+     * @param $pid
+     * @return bool
+     */
+    private function _kill($pid){
+        $cmd = "kill {$pid}";
+        exec($cmd, $sign);
+        if(!$sign){
+            return true;
+        }
+        do {
+            $out = [];
+            $c = "ps ax | awk '{ print $1 }' | grep -e \"^{$pid}$\"";
+            exec($c, $out);
+            if (empty($out)) {
+                break;
+            }else{
+                exec("kill -9 {$pid}");
+            }
+        } while (true);
     }
 
     /**

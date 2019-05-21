@@ -25,6 +25,32 @@ class SwooleAsyncTimerController extends Controller {
     public $defaultAction = 'run';
 
     /**
+     * 强制执行的选项
+     * @var
+     */
+    public $force;
+
+    /**
+     * 接收force选项
+     * @param string $actionID
+     * @return array|string[]
+     */
+    public function options($actionID)
+    {
+        return ['force'];
+    }
+
+    /**
+     * 设置别名
+     * @return array
+     */
+    public function optionAliases()
+    {
+        return ['f' => 'force'];
+    }
+
+
+    /**
      * 初始化
      * @return [type] [description]
      */
@@ -73,23 +99,21 @@ class SwooleAsyncTimerController extends Controller {
     }
 
     /**
-     * 启动服务action
-     * @param  array  $args [description]
-     * @return [type]       [description]
+     * 启动服务
+     * @param string $mode
      */
     public function actionRun($mode='start'){
-
         $swooleService = new SwooleService($this->settings,Yii::$app, $this);
         switch ($mode) {
             case 'start':
                 $swooleService->serviceStart();
                 break;
             case 'restart':
-                $swooleService->serviceStop();
+                $swooleService->serviceStop(!!$this->force);
                 $swooleService->serviceStart();
                 break;
             case 'stop':
-                $swooleService->serviceStop();
+                $swooleService->serviceStop(!!$this->force);
                 break;
             case 'stats':
                 $swooleService->serviceStats();
