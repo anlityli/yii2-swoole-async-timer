@@ -12,7 +12,8 @@ use yii\console\Controller;
 use anlity\swooleAsyncTimer\src\SwooleService;
 
 class SwooleAsyncTimerController extends Controller {
-    
+
+    public $versionNumber = '0.8.3';
     /**
      * 存储swooleAsync配置中的所有配置项
      * @var array
@@ -22,13 +23,15 @@ class SwooleAsyncTimerController extends Controller {
      * 默认controller
      * @var string
      */
-    public $defaultAction = 'run';
+    public $defaultAction = 'default';
 
     /**
      * 强制执行的选项
      * @var
      */
     public $force;
+
+    public $version;
 
     /**
      * 接收force选项
@@ -37,7 +40,7 @@ class SwooleAsyncTimerController extends Controller {
      */
     public function options($actionID)
     {
-        return ['force'];
+        return ['force', 'version'];
     }
 
     /**
@@ -46,13 +49,16 @@ class SwooleAsyncTimerController extends Controller {
      */
     public function optionAliases()
     {
-        return ['f' => 'force'];
+        return [
+            'f' => 'force',
+            'v' => 'version',
+        ];
     }
 
 
     /**
      * 初始化
-     * @return [type] [description]
+     * @throws Yii\base\ErrorException
      */
     public function init() {
 
@@ -62,8 +68,17 @@ class SwooleAsyncTimerController extends Controller {
     }
 
     /**
+     * 默认执行的action
+     */
+    public function actionDefault(){
+        if($this->version){
+            echo($this->versionNumber.PHP_EOL);
+        }
+    }
+
+    /**
      * 初始化配置信息
-     * @return [type] [description]
+     * @throws Yii\base\ErrorException
      */
     protected function prepareSettings()
     {
