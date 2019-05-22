@@ -69,7 +69,7 @@ class SServer {
 
     /**
      * 运行服务
-     * @return [type] [description]
+     * @return mixed
      */
     public function run(){
 
@@ -106,9 +106,8 @@ class SServer {
     }
 
     /**
-     * [onStart description]
-     * @param  [type] $server [description]
-     * @return [type]         [description]
+     * @param $server
+     * @return bool
      */
     public function onStart($server){
         echo '[' . date('Y-m-d H:i:s') . "]\t swoole_server master worker start\n";
@@ -120,9 +119,7 @@ class SServer {
     }
 
     /**
-     * [onManagerStart description]
-     * @param  [type] $server [description]
-     * @return [type]         [description]
+     * @param $server
      */
     public function onManagerStart($server){
         echo '[' . date('Y-m-d H:i:s') . "]\t swoole_server manager worker start\n";
@@ -130,7 +127,6 @@ class SServer {
     }
 
     /**
-     * [onOpen description]
      * @param $server
      * @param $request
      */
@@ -139,7 +135,6 @@ class SServer {
     }
 
     /**
-     * [onMessage description]
      * @param $server
      * @param $frame
      * @return mixed
@@ -189,8 +184,8 @@ class SServer {
     }
 
     /**
-     * [onShutdown description]
-     * @return [type] [description]
+     * @param $server
+     * @param $fd
      */
     public function onClose($server, $fd){
         //unlink($this->setting['pidfile']);
@@ -199,10 +194,8 @@ class SServer {
     }
 
     /**
-     * [onWorkerStart description]
-     * @param  [type] $server   [description]
-     * @param  [type] $workerId [description]
-     * @return [type]           [description]
+     * @param $server
+     * @param $workerId
      */
     public function onWorkerStart($server, $workerId){
         if ($workerId >= $this->setting['worker_num']) {
@@ -210,6 +203,9 @@ class SServer {
         } else {
             $this->setProcessName($server->setting['process_name'] . '-event');
         }
+        //记录进程id,脚本实现自动重启
+        $pid = "\n{$this->server->worker_pid}";
+        file_put_contents($this->setting['pidfile'], $pid, FILE_APPEND);
         // 生成一个定时器
         if ($this->setting['with_timer'] && !$server->taskworker && $workerId == 0) {
             $server->tick($this->setting['timer_interval'], function($timerId) use($server){
@@ -222,10 +218,8 @@ class SServer {
     }
 
     /**
-     * [onWorkerStop description]
-     * @param  [type] $server   [description]
-     * @param  [type] $workerId [description]
-     * @return [type]           [description]
+     * @param $server
+     * @param $workerId
      */
     public function onWorkerStop($server, $workerId){
         // 关闭定时器
@@ -294,13 +288,14 @@ class SServer {
 
         return true;
     }
+
     /**
      * 任务处理
-     * @param $server
-     * @param $taskId
-     * @param $fromId
-     * @param $request
-     * @return mixed
+     * @param $serv
+     * @param $task_id
+     * @param $from_id
+     * @param $data
+     * @return array|bool|mixed|void
      */
     public function onTask($serv, $task_id, $from_id, $data){
         $this->logger('[task data] '.$data);
@@ -339,8 +334,8 @@ class SServer {
 
     /**
      * 解析data对象
-     * @param  [type] $data [description]
-     * @return [type]       [description]
+     * @param $data
+     * @return array|bool|mixed
      */
     private function parseData($data){
         if(is_string($data)){
@@ -356,8 +351,8 @@ class SServer {
 
     /**
      * 解析onfinish数据
-     * @param  [type] $data [description]
-     * @return [type]       [description]
+     * @param $data
+     * @return bool|string
      */
     private function genFinishData($data){
         if(!isset($data['finish']) || !is_array($data['finish'])){
@@ -368,10 +363,10 @@ class SServer {
 
     /**
      * 任务结束回调函数
-     * @param  [type] $server [description]
-     * @param  [type] $taskId [description]
-     * @param  [type] $data   [description]
-     * @return [type]         [description]
+     * @param $server
+     * @param $taskId
+     * @param $data
+     * @return bool
      */
     public function onFinish($server, $taskId, $data){
 
@@ -384,6 +379,9 @@ class SServer {
 
     }
 
+    /**
+     *
+     */
     public function onShutdown(){
         echo '[' . date('Y-m-d H:i:s') . "]\t server shutdown 关闭服务完成\n";
         unlink($this->setting['pidfile']);
@@ -391,8 +389,8 @@ class SServer {
 
     /**
      * 记录日志 日志文件名为当前年月（date("Y-m")）
-     * @param  [type] $msg 日志内容 
-     * @return [type]      [description]
+     * @param $msg
+     * @param string $logfile
      */
     public function logger($msg,$logfile='') {
         if (empty($msg)) {

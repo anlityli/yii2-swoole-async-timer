@@ -31,8 +31,7 @@ class SwooleService{
     }
 
     /**
-     * [check description]
-     * @return [type] [description]
+     * 检测
      */
     private function check(){
         /**
@@ -58,8 +57,8 @@ class SwooleService{
 
     /**
      * 获取指定端口的服务占用列表
-     * @param  [type] $port 端口号
-     * @return [type]       [description]
+     * @param $port
+     * @return array
      */
     private function bindPort($port) {
         $res = [];
@@ -78,9 +77,9 @@ class SwooleService{
         }
         return $res;
     }
+
     /**
      * 启动服务
-     * @return [type] [description]
      */
     public function serviceStart(){
 
@@ -123,9 +122,6 @@ class SwooleService{
 
     /**
      * 查看服务状态
-     * @param  [type] $host host
-     * @param  [type] $port port
-     * @return [type]       [description]
      */
     public function serviceStats(){
 
@@ -149,7 +145,6 @@ class SwooleService{
 
     /**
      * 查看进程列表
-     * @return [type] [description]
      */
     public function serviceList(){
 
@@ -180,29 +175,29 @@ class SwooleService{
         $this->msg("正在停止服务...");
 
         if (!file_exists($pidfile)) {
-            $this->error("pid文件:". $pidfile ."不存在");
-        }
-        $pid = explode("\n", file_get_contents($pidfile));
-        if($isForce && !empty($pid)){
-            foreach($pid as $id){
-                if($id){
-                    $this->_kill($id);
+            $this->msg("pid文件:". $pidfile ."不存在");
+        } else {
+            $pid = explode("\n", file_get_contents($pidfile));
+            if($isForce && !empty($pid)){
+                foreach($pid as $id){
+                    if($id){
+                        $this->_kill($id);
+                    }
                 }
             }
-        }
-        if(!$isForce){
-            if ($pid[0]) {
-                $this->_kill($pid[0]);
+            if(!$isForce){
+                if ($pid[0]) {
+                    $this->_kill($pid[0]);
+                }
             }
+
+            //确保停止服务后swoole-task-pid文件被删除
+            if (file_exists($pidfile)) {
+                unlink($pidfile);
+            }
+
+            $this->msg("服务已停止");
         }
-
-        //确保停止服务后swoole-task-pid文件被删除
-        if (file_exists($pidfile)) {
-            unlink($pidfile);
-        }
-
-        $this->msg("服务已停止");
-
     }
 
     /**
@@ -226,12 +221,13 @@ class SwooleService{
                 exec("kill -9 {$pid}");
             }
         } while (true);
+        return true;
     }
 
     /**
-     * [error description]
-     * @param  [type] $msg [description]
-     * @return [type]      [description]
+     * 提示信息
+     * @param $msg
+     * @param bool $exit
      */
     private function msg($msg,$exit=false){
 
@@ -240,11 +236,11 @@ class SwooleService{
         }else{
             echo $msg . PHP_EOL;
         }
-    }    
+    }
+
     /**
-     * [error description]
-     * @param  [type] $msg [description]
-     * @return [type]      [description]
+     * 提示错误信息
+     * @param $msg
      */
     private function error($msg){
         exit("[error]:".$msg . PHP_EOL);
