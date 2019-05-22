@@ -167,8 +167,9 @@ class SwooleService{
     /**
      * 停止服务
      * @param bool $isForce
+     * @param callable|null $callback
      */
-    public function serviceStop($isForce = false){
+    public function serviceStop($isForce = false, callable $callback = null){
 
         $pidfile = $this->settings['pidfile'];
 
@@ -198,19 +199,16 @@ class SwooleService{
 
             $this->msg("服务已停止");
         }
+        if($callback !== null) $callback();
     }
 
     /**
      * 杀进程
      * @param $pid
-     * @return bool
      */
     private function _kill($pid){
         $cmd = "kill {$pid}";
         exec($cmd, $sign);
-        if(!$sign){
-            return true;
-        }
         do {
             $out = [];
             $c = "ps ax | awk '{ print $1 }' | grep -e \"^{$pid}$\"";
@@ -221,7 +219,6 @@ class SwooleService{
                 exec("kill -9 {$pid}");
             }
         } while (true);
-        return true;
     }
 
     /**

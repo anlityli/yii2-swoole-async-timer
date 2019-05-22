@@ -124,8 +124,9 @@ class SwooleAsyncTimerController extends Controller {
                 $swooleService->serviceStart();
                 break;
             case 'restart':
-                $swooleService->serviceStop(!!$this->force);
-                $swooleService->serviceStart();
+                $swooleService->serviceStop(!!$this->force, function() use ($swooleService){
+                    $swooleService->serviceStart();
+                });
                 break;
             case 'stop':
                 $swooleService->serviceStop(!!$this->force);
