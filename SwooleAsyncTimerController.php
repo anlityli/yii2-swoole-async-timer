@@ -13,7 +13,7 @@ use anlity\swooleAsyncTimer\src\SwooleService;
 
 class SwooleAsyncTimerController extends Controller {
 
-    public $versionNumber = '0.8.3';
+    public $versionNumber = '0.8.7';
     /**
      * 存储swooleAsync配置中的所有配置项
      * @var array
@@ -94,6 +94,7 @@ class SwooleAsyncTimerController extends Controller {
             'worker_num'        => '2',
             'task_worker_num'   => '2',
             'task_max_request'  => '10000',
+            'task_enable_coroutine'  => true,
             'debug'             => true,
             'pidfile'           => $runtimePath.'/tmp/yii2-swoole-async-timer.pid',
             'log_dir'           => $runtimePath.'/yii2-swoole-async-timer/log',

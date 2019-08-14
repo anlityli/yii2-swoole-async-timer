@@ -15,6 +15,7 @@ return [
         'worker_num'       => '2',				//work进程数目
         'task_worker_num'  => '2',				//task进程的数量
         'task_max_request' => '10000',			//work进程最大处理的请求数
+        'task_enable_coroutine' => true,        // task支持协程
         'task_tmpdir'      => dirname(__DIR__).'/runtime/task',		 //设置task的数据临时目录
         'log_file'         => dirname(__DIR__).'/runtime/logs/swooleHttp.log', //指定swoole错误日志文件
         'client_timeout'   => '20',				//client链接服务器时超时时间(s)
