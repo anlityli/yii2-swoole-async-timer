@@ -93,6 +93,9 @@ class SServer {
         //事件回调函数绑定
         foreach ($call as $v) {
             $m = 'on' . ucfirst($v);
+            if($this->setting['task_enable_coroutine'] && $v == 'task'){
+                $m = 'onTaskEnableCoroutine';
+            }
             if (method_exists($this, $m)) {
                 $this->server->on($v, [$this, $m]);
             }
@@ -330,6 +333,46 @@ class SServer {
             }
         }
         return $data;
+    }
+
+    /**
+     * 开启了 task_enable_coroutine 的task回调函数
+     * @param $serv
+     * @param \Swoole\Server\Task $task
+     */
+    public function onTaskEnableCoroutine($serv, \Swoole\Server\Task $task){
+        $this->logger('[task data] '.$task->data);
+        $data = $this->parseData($task->data);
+        if($data === false){
+            return;
+        }
+        foreach ($data['data'] as $param) {
+            if(!isset($param['a']) || empty($param['a'])){
+                continue;
+            }
+            $action = $param["a"];
+            $params = [];
+            if(isset($param['p'])){
+                $params = $param['p'];
+                if(!is_array($params)){
+                    $params = [strval($params)];
+                }
+            }
+            try{
+                //print_r($action.PHP_EOL);
+                $parts = $this->app->createController($action);
+                if (is_array($parts)) {
+                    $res = $this->app->runAction($action,$params);
+                    $this->logger('[task result] '.var_export($res,true));
+                }
+                if($this->app->db && $this->app->db->isActive){
+                    $this->app->db->close();
+                }
+            }catch(Exception $e){
+                $this->logger($e->getMessage());
+            }
+        }
+        $task->finish($data);
     }
 
     /**
