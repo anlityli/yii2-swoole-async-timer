@@ -9,6 +9,7 @@
 
 namespace anlity\swooleAsyncTimer\src;
 
+use SebastianBergmann\Timer\Timer;
 use yii\base\Exception;
 use yii\helpers\Json;
 
@@ -88,6 +89,7 @@ class SServer {
             'finish',
             'close',
             'workerStop',
+            'workerExit',
             'shutdown',
         ];
         //事件回调函数绑定
@@ -225,13 +227,21 @@ class SServer {
      * @param $workerId
      */
     public function onWorkerStop($server, $workerId){
-        // 关闭定时器
-        if($this->_timerId !== false){
-            echo '['. date('Y-m-d H:i:s') ."]\t 清空定时器{$this->_timerId}\n";
-            $server->clearTimer($this->_timerId);
-        }
         $this->app->swooleAsyncTimer->onWorkerStop($server, $workerId);
         echo '['. date('Y-m-d H:i:s') ."]\t swoole_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
+    }
+
+    /**
+     * @param $server
+     * @param $workerId
+     */
+    public function onWorkerExit($server, $workerId){
+        // 清空定时器
+        foreach(\Swoole\Timer::list() as $timerId){
+            \Swoole\Timer::clear($timerId);
+        }
+        $this->app->swooleAsyncTimer->onWorkerExit($server, $workerId);
+        echo '['. date('Y-m-d H:i:s') ."]\t swoole_server[{$server->setting['process_name']}  worker:{$workerId} exit\n";
     }
 
     // /**

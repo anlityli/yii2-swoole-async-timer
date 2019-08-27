@@ -180,6 +180,14 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     }
 
     /**
+     * swoole进程退出时的回调
+     * @param $server
+     * @param $workerId
+     */
+    public function onWorkerExit($server, $workerId){
+    }
+
+    /**
      * 需继承此方法，用于定时器的回调方法
      * @param $timerId
      * @param $server

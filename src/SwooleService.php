@@ -216,7 +216,7 @@ class SwooleService{
             if (empty($out)) {
                 break;
             }else{
-                exec("kill -9 {$pid}");
+                exec("kill -9 {$pid} >/dev/null 2>&1", $killOut);
             }
         } while (true);
     }

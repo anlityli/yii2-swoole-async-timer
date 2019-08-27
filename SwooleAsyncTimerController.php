@@ -13,7 +13,7 @@ use anlity\swooleAsyncTimer\src\SwooleService;
 
 class SwooleAsyncTimerController extends Controller {
 
-    public $versionNumber = '0.8.8';
+    public $versionNumber = '0.9.0';
     /**
      * 存储swooleAsync配置中的所有配置项
      * @var array
@@ -23,7 +23,7 @@ class SwooleAsyncTimerController extends Controller {
      * 默认controller
      * @var string
      */
-    public $defaultAction = 'default';
+    public $defaultAction = 'run';
 
     /**
      * 强制执行的选项
