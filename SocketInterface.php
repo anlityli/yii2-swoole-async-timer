@@ -18,4 +18,7 @@ interface SocketInterface
     public function onOpen($fd);
     public function onClose($fd);
     public function onMessage($fd, $data);
+    public function onTaskRunActionStart($server, $workerId, $action, $params);
+    public function onTaskRunActionFinish($server, $workerId, $action, $params);
+    public function onTaskRunActionError($fd, $data, $action, $params, $errorMessage);
 }

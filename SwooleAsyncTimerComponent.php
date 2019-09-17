@@ -219,5 +219,39 @@ class SwooleAsyncTimerComponent extends \yii\base\Component implements SocketInt
     public function onMessage($fd, $data){
 
     }
+
+    /**
+     * 任务运行开始
+     * @param $server
+     * @param $workerId
+     * @param $action
+     * @param $params
+     */
+    public function onTaskRunActionStart($server, $workerId, $action, $params){
+
+    }
+
+    /**
+     * 任务运行完成
+     * @param $server
+     * @param $workerId
+     * @param $action
+     * @param $params
+     */
+    public function onTaskRunActionFinish($server, $workerId, $action, $params){
+
+    }
+
+    /**
+     * 任务运行发生错误时
+     * @param $fd
+     * @param $data
+     * @param $action
+     * @param $params
+     * @param $errorMessage
+     */
+    public function onTaskRunActionError($fd, $data, $action, $params, $errorMessage){
+
+    }
     
 }

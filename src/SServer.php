@@ -328,6 +328,7 @@ class SServer {
                     $params = [strval($params)];
                 }
             }
+            $this->app->swooleAsyncTimer->onTaskRunActionStart($serv, $from_id, $action, $params);
             try{
                 //print_r($action.PHP_EOL);
                 $parts = $this->app->createController($action);
@@ -339,8 +340,10 @@ class SServer {
                     $this->app->db->close();
                 }
             }catch(Exception $e){
+                $this->app->swooleAsyncTimer->onTaskRunActionError($serv, $from_id, $action, $params, $e->getMessage());
                 $this->logger($e->getMessage());
             }
+            $this->app->swooleAsyncTimer->onTaskRunActionFinish($serv, $from_id, $action, $params);
         }
         return $data;
     }
@@ -368,6 +371,7 @@ class SServer {
                     $params = [strval($params)];
                 }
             }
+            $this->app->swooleAsyncTimer->onTaskRunActionStart($serv, $task->worker_id, $action, $params);
             try{
                 //print_r($action.PHP_EOL);
                 $parts = $this->app->createController($action);
@@ -378,9 +382,11 @@ class SServer {
                 if($this->app->db && $this->app->db->isActive){
                     $this->app->db->close();
                 }
-            }catch(Exception $e){
+            }catch(\Exception $e){
+                $this->app->swooleAsyncTimer->onTaskRunActionError($serv, $task->worker_id, $action, $params, $e->getMessage());
                 $this->logger($e->getMessage());
             }
+            $this->app->swooleAsyncTimer->onTaskRunActionFinish($serv, $task->worker_id, $action, $params);
         }
         $task->finish($data);
     }
