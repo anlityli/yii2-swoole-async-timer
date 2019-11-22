@@ -101,6 +101,8 @@ class SwooleAsyncTimerController extends Controller {
             'task_tmpdir'       => $runtimePath.'/yii2-swoole-async-timer/task',
             'log_file'          => $runtimePath.'/yii2-swoole-async-timer/log/http.log',
             'log_size'          => 204800000,
+            'restartBeforeStartCallback'   => null, //重启服务时的回调方法，重启后并开始服务前的回调
+            'restartAfterStartCallback'   => null, //重启服务时的回调方法，重启后并开始服务后的回调
         ];
         try {
             $settings = Yii::$app->params['swooleAsyncTimer'];
@@ -126,7 +128,15 @@ class SwooleAsyncTimerController extends Controller {
                 break;
             case 'restart':
                 $swooleService->serviceStop(!!$this->force, function() use ($swooleService){
+                    $restartBeforeStartCallback = $this->settings['restartBeforeStartCallback'];
+                    if(!is_null($restartBeforeStartCallback) && ($restartBeforeStartCallback instanceof \Closure || is_callable($restartBeforeStartCallback))){
+                        $restartBeforeStartCallback($swooleService, $this);
+                    }
                     $swooleService->serviceStart();
+                    $restartAfterStartCallback = $this->settings['restartAfterStartCallback'];
+                    if(!is_null($restartAfterStartCallback) && ($restartAfterStartCallback instanceof \Closure || is_callable($restartAfterStartCallback))){
+                        $restartAfterStartCallback($swooleService, $this);
+                    }
                 });
                 break;
             case 'stop':
